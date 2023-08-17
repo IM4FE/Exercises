@@ -5,7 +5,7 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace test
+namespace test//задание 1
 {
     internal class Program
     {
