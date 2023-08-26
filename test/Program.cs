@@ -22,17 +22,35 @@ namespace test//задание 1
         {
             string str = Console.ReadLine();
             string strRes = "";
-            if (str.Length%2==0)
+            if (!(str.Count(Char.IsUpper)>0))
             {
-                int strLength = str.Length / 2;
-                string strTemp1=str.Substring(0,strLength);
-                string strTemp2 = str.Substring(strLength);
-                strRes+=Mirror(strLength, strTemp1);
-                strRes+=Mirror(strLength, strTemp2);
+                if (str.Length % 2 == 0)
+                {
+                    int strLength = str.Length / 2;
+                    string strTemp1 = str.Substring(0, strLength);
+                    string strTemp2 = str.Substring(strLength);
+                    strRes += Mirror(strLength, strTemp1);
+                    strRes += Mirror(strLength, strTemp2);
+                }
+                else
+                {
+                    strRes = Mirror(str.Length, str) + str;
+                }
             }
             else
             {
-                strRes = Mirror(str.Length, str) + str;
+                strRes = "Ошибка. Были введены не подходящие символы! Неприемлемые символы:";
+                for (int i = 0; i < str.Length; i++)
+                {
+                    char letter = char.Parse(str.Substring(i, 1));
+                    if (Char.IsUpper(letter))
+                    {
+                        if (i == 0)
+                            strRes += letter;
+                        else
+                            strRes +="," + letter;
+                    }
+                }
             }
             Console.WriteLine(strRes);
             Console.ReadLine();
