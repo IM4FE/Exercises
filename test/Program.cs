@@ -9,8 +9,27 @@ namespace test
 {
     internal class Program
     {
-        static string CountNumLetter (string str)
+        static void SearchVowelRegion (string str)
         {
+            int? firstIndex = null;
+            int endIndex=0;
+            string res = "";
+            for (int i=0;i<str.Length;i++)
+            {
+                if (str[i] == 'a' || str[i] == 'e' || str[i] == 'u' || str[i] == 'y' || str[i] == 'o' || str[i] == 'i')
+                {
+                    if (firstIndex == null)
+                    firstIndex = i;
+                    else
+                        endIndex = i;
+                }
+            }
+            res = "Подстрока с началом и концом из «aeiouy»: " + str.Substring(Convert.ToInt32(firstIndex), endIndex - Convert.ToInt32(firstIndex)+1);
+            Console.WriteLine(res);
+        }
+        static void CountNumLetter (string str)
+        {
+            string res = "";
             char[] lettersAll = str.ToCharArray ();
             List<char> lettersSort=new List<char>();
             for (int i= 0; i < str.Length; i++)
@@ -32,9 +51,9 @@ namespace test
                         num++;
                     }    
                 }
-                str += "\nСимвол '" + lettersSort[i] + "' повторяется " + num + " раз";
+                res += "\nСимвол '" + lettersSort[i] + "' повторяется " + num + " раз";
             }
-            return str;
+            Console.WriteLine(res);
         }
         static string Mirror(int strLength, string str)
         {
@@ -63,7 +82,9 @@ namespace test
                 {
                     strRes = Mirror(str.Length, str) + str;
                 }
-                strRes = CountNumLetter(strRes);
+                Console.Write(strRes);
+                CountNumLetter(strRes);
+                SearchVowelRegion(strRes);
             }
             else
             {
@@ -89,8 +110,8 @@ namespace test
                         else
                             strRes += "," + lettersUp[i];
                 }
+                Console.WriteLine(strRes);
             }
-            Console.WriteLine(strRes);
             Console.ReadLine();
         }
     }
