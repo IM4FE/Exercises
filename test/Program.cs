@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace test
@@ -12,8 +14,7 @@ namespace test
         static void SearchVowelRegion (string str)
         {
             int? firstIndex = null;
-            int endIndex=0;
-            string res = "";
+            int? endIndex=null;
             for (int i=0;i<str.Length;i++)
             {
                 if (str[i] == 'a' || str[i] == 'e' || str[i] == 'u' || str[i] == 'y' || str[i] == 'o' || str[i] == 'i')
@@ -23,8 +24,10 @@ namespace test
                     else
                         endIndex = i;
                 }
+                if (i == str.Length - 1 && endIndex == null)
+                    endIndex = firstIndex;
             }
-            res = "Подстрока с началом и концом из «aeiouy»: " + str.Substring(Convert.ToInt32(firstIndex), endIndex - Convert.ToInt32(firstIndex)+1);
+            string res = firstIndex == null ? "В строке нет гласных букв" : "Подстрока с началом и концом из «aeiouy»: " + str.Substring(Convert.ToInt32(firstIndex), Convert.ToInt32(endIndex) - Convert.ToInt32(firstIndex)+1);
             Console.WriteLine(res);
         }
         static void CountNumLetter (string str)
@@ -66,52 +69,59 @@ namespace test
         }
         static void Main(string[] args)
         {
+            string pattern = "^[a-zA-Z]+$";
+            Regex rg = new Regex(pattern);
             string str = Console.ReadLine();
-            string strRes = "";
-            if (!(str.Count(Char.IsUpper) > 0))
+            if (rg.IsMatch(str))
             {
-                if (str.Length % 2 == 0)
+                string strRes = "";
+                if (!(str.Count(Char.IsUpper) > 0))
                 {
-                    int strLength = str.Length / 2;
-                    string strTemp1 = str.Substring(0, strLength);
-                    string strTemp2 = str.Substring(strLength);
-                    strRes += Mirror(strLength, strTemp1);
-                    strRes += Mirror(strLength, strTemp2);
+                    if (str.Length % 2 == 0)
+                    {
+                        int strLength = str.Length / 2;
+                        string strTemp1 = str.Substring(0, strLength);
+                        string strTemp2 = str.Substring(strLength);
+                        strRes += Mirror(strLength, strTemp1);
+                        strRes += Mirror(strLength, strTemp2);
+                    }
+                    else
+                    {
+                        strRes = Mirror(str.Length, str) + str;
+                    }
+                    Console.Write(strRes);
+                    CountNumLetter(strRes);
+                    SearchVowelRegion(strRes);
                 }
                 else
                 {
-                    strRes = Mirror(str.Length, str) + str;
-                }
-                Console.Write(strRes);
-                CountNumLetter(strRes);
-                SearchVowelRegion(strRes);
-            }
-            else
-            {
-                strRes = "Ошибка. Были введены не подходящие символы! Неприемлемые символы:";
-                List<char> lettersUp = new List<char>();
-                for (int i = 0; i < str.Length; i++)
-                {
-                    char letter = char.Parse(str.Substring(i, 1));
-                    if (Char.IsUpper(letter))
+                    strRes = "Ошибка. Были введены не подходящие символы! Неприемлемые символы:";
+                    List<char> lettersUp = new List<char>();
+                    for (int i = 0; i < str.Length; i++)
                     {
-                        if (lettersUp.Contains(str[i]))
+                        char letter = char.Parse(str.Substring(i, 1));
+                        if (Char.IsUpper(letter))
                         {
-                            continue;
+                            if (lettersUp.Contains(str[i]))
+                            {
+                                continue;
+                            }
+                            else
+                                lettersUp.Add(str[i]);
                         }
-                        else
-                            lettersUp.Add(str[i]);
                     }
-                }
-                for (int i = 0; i < lettersUp.Count; i++)
-                {
-                    if (i == 0)
+                    for (int i = 0; i < lettersUp.Count; i++)
+                    {
+                        if (i == 0)
                             strRes += lettersUp[i];
                         else
                             strRes += "," + lettersUp[i];
+                    }
+                    Console.WriteLine(strRes);
                 }
-                Console.WriteLine(strRes);
             }
+            else
+                Console.WriteLine("Входная строка не должна иметь кириллицу или цифры!");
             Console.ReadLine();
         }
     }
