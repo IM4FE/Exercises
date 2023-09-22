@@ -9,8 +9,107 @@ using System.Threading.Tasks;
 
 namespace test
 {
+    class TreeNode //Tree sort
+    {
+        public TreeNode(char data)
+        {
+            Data = data;
+        }
+        public char Data { get; set; } //данные
+        public TreeNode Left { get; set; } //левая ветка дерева
+        public TreeNode Right { get; set; } //правая ветка дерева
+        public void Insert(TreeNode node) //рекурсивное добавление узла в дерево
+        {
+            if (node.Data < Data)
+            {
+                if (Left == null)
+                {
+                    Left = node;
+                }
+                else
+                {
+                    Left.Insert(node);
+                }
+            }
+            else
+            {
+                if (Right == null)
+                {
+                    Right = node;
+                }
+                else
+                {
+                    Right.Insert(node);
+                }
+            }
+        }
+        public char[] Transform(List<char> elements = null) //преобразование дерева в отсортированный массив
+        {
+            if (elements == null)
+            {
+                elements = new List<char>();
+            }
+
+            if (Left != null)
+            {
+                Left.Transform(elements);
+            }
+
+            elements.Add(Data);
+
+            if (Right != null)
+            {
+                Right.Transform(elements);
+            }
+
+            return elements.ToArray();
+        }
+    }
     internal class Program
     {
+        static void Swap(ref char x, ref char y)
+        {
+            var t = x;
+            x = y;
+            y = t;
+        }
+
+        static int Partition(char [] array, int minIndex, int maxIndex)
+        {
+            var pivot = minIndex - 1;
+            for (var i = minIndex; i < maxIndex; i++)
+            {
+                if (array[i] < array[maxIndex])
+                {
+                    pivot++;
+                    Swap(ref array[pivot], ref array[i]);
+                }
+            }
+
+            pivot++;
+            Swap(ref array[pivot],ref array[maxIndex]);
+            return pivot;
+        }
+
+        // quick sort
+        static char [] QuickSort(char [] array, int minIndex, int maxIndex)
+        {
+            if (minIndex >= maxIndex)
+            {
+                return array;
+            }
+
+            var pivotIndex = Partition(array, minIndex, maxIndex);
+            QuickSort(array, minIndex, pivotIndex - 1);
+            QuickSort(array, pivotIndex + 1, maxIndex);
+
+            return array;
+        }
+
+        static char [] QuickSort(char[] array)
+        {
+            return QuickSort(array, 0, array.Length - 1);
+        }
         static void SearchVowelRegion (string str)
         {
             int? firstIndex = null;
@@ -69,13 +168,11 @@ namespace test
         }
         static void Main(string[] args)
         {
-            string pattern = "^[a-zA-Z]+$";
+            string pattern = "^[a-z]+$";
             Regex rg = new Regex(pattern);
             string str = Console.ReadLine();
-            if (rg.IsMatch(str))
-            {
-                string strRes = "";
-                if (!(str.Count(Char.IsUpper) > 0))
+            string strRes = "";
+                if (rg.IsMatch(str))
                 {
                     if (str.Length % 2 == 0)
                     {
@@ -92,6 +189,32 @@ namespace test
                     Console.Write(strRes);
                     CountNumLetter(strRes);
                     SearchVowelRegion(strRes);
+                    string options = @"
+1) Quick
+2) Tree";
+                    Console.WriteLine(options+"\nНажмите клавишу с номером варианта сортировки\n(Если вы нажали кнопку, которой нет в списке, то будет по умолчанию применятся сортировка методом Quick): ");
+                Console.Write("Ваш выбор: ");
+                    switch(Console.ReadKey().Key)
+                    {
+                        case ConsoleKey.D1: //Quick
+                        Console.Write("\nСортировка Quick: ");
+                        char [] arr= strRes.ToCharArray();
+                        Console.WriteLine(QuickSort(arr));
+                            break;
+                        case ConsoleKey.D2:
+                            var treeNode = new TreeNode(strRes[0]);
+                            for (int i = 1; i < strRes.Length; i++)
+                            {
+                                treeNode.Insert(new TreeNode(strRes[i]));
+                            }
+                            Console.Write("\nСортировка Tree: "); //Tree
+                            Console.WriteLine(treeNode.Transform());
+                            break;
+                        default:
+                            {
+                                goto case ConsoleKey.D1;
+                            }
+                    }
                 }
                 else
                 {
@@ -100,7 +223,7 @@ namespace test
                     for (int i = 0; i < str.Length; i++)
                     {
                         char letter = char.Parse(str.Substring(i, 1));
-                        if (Char.IsUpper(letter))
+                        if (!rg.IsMatch(letter.ToString()))
                         {
                             if (lettersUp.Contains(str[i]))
                             {
@@ -110,18 +233,8 @@ namespace test
                                 lettersUp.Add(str[i]);
                         }
                     }
-                    for (int i = 0; i < lettersUp.Count; i++)
-                    {
-                        if (i == 0)
-                            strRes += lettersUp[i];
-                        else
-                            strRes += "," + lettersUp[i];
-                    }
-                    Console.WriteLine(strRes);
+                    Console.WriteLine(strRes+string.Join(",", lettersUp));
                 }
-            }
-            else
-                Console.WriteLine("Входная строка не должна иметь кириллицу или цифры!");
             Console.ReadLine();
         }
     }
