@@ -2,10 +2,19 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
 using System.Linq;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Text.Json;
+using test;
+using static System.Net.WebRequestMethods;
+using System.IO;
+using System.Net;
+using test.ModelsRandApi.Request;
+using test.ModelsRandApi.Response;
+using System.Security.Cryptography;
 
 namespace test
 {
@@ -67,6 +76,55 @@ namespace test
     }
     internal class Program
     {
+        private async Task<T[]> GenerateAsync<T, TParams>(T lenght, TParams parameters)
+        {
+            LowerBaseResonce<T> result = await POSTRequstRandApi<T, TParams, LowerBaseResonce<T>>(new BaseRequestRpc<TParams>(parameters), lenght);
+            if (result.random == null)
+                return null;
+            T[] randomResult = result.random.data;
+                return randomResult;
+            }
+        private async Task<TResponse> POSTRequstRandApi<T, TRequest, TResponse>(BaseRequestRpc<TRequest> requestData, T lenght)
+            where TResponse : LowerBaseResonce<T>
+        {
+            string url = "https://api.random.org/json-rpc/4/invoke";
+            int id = (int)DateTime.UtcNow.Ticks;
+            requestData.id = id;
+
+            string rpc = JsonSerializer.Serialize(requestData);
+            byte[] rpcBuffer = Encoding.UTF8.GetBytes(rpc);
+
+            using (MemoryStream requestStream = new MemoryStream(rpcBuffer))
+            {
+                try
+                {
+                    HttpContent requestContent = new StreamContent(requestStream);
+                    requestContent.Headers.Add("Content-Type", "application/json");
+
+                    using (var http = new HttpClient())
+                    {
+                        HttpResponseMessage response = await http.PostAsync(url, requestContent);
+                        await response.Content.LoadIntoBufferAsync();
+                        var rpcStream = await response.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                        BaseResponseRpc<TResponse> responseData = await JsonSerializer.DeserializeAsync<BaseResponseRpc<TResponse>>(rpcStream).ConfigureAwait(false);
+
+                        if (response.StatusCode != HttpStatusCode.OK || responseData.error != null)
+                        {
+                            throw new InvalidOperationException(responseData.error.message);
+                        }
+
+                        if (responseData.id != id)
+                            throw new InvalidOperationException("Response id does not match request id");
+
+                        return responseData.result;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException("Error occured making a request to random.org.", ex);
+                }
+            }
+        }
         static void Swap(ref char x, ref char y)
         {
             var t = x;
@@ -166,56 +224,77 @@ namespace test
             }
             return res;
         }
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             string pattern = "^[a-z]+$";
             Regex rg = new Regex(pattern);
             string str = Console.ReadLine();
             string strRes = "";
-                if (rg.IsMatch(str))
+            if (rg.IsMatch(str))
+            {
+                if (str.Length % 2 == 0)
                 {
-                    if (str.Length % 2 == 0)
-                    {
-                        int strLength = str.Length / 2;
-                        string strTemp1 = str.Substring(0, strLength);
-                        string strTemp2 = str.Substring(strLength);
-                        strRes += Mirror(strLength, strTemp1);
-                        strRes += Mirror(strLength, strTemp2);
-                    }
-                    else
-                    {
-                        strRes = Mirror(str.Length, str) + str;
-                    }
-                    Console.Write(strRes);
-                    CountNumLetter(strRes);
-                    SearchVowelRegion(strRes);
-                    string options = @"
+                    int strLength = str.Length / 2;
+                    string strTemp1 = str.Substring(0, strLength);
+                    string strTemp2 = str.Substring(strLength);
+                    strRes += Mirror(strLength, strTemp1);
+                    strRes += Mirror(strLength, strTemp2);
+                }
+                else
+                {
+                    strRes = Mirror(str.Length, str) + str;
+                }
+                Console.Write(strRes);
+                CountNumLetter(strRes);
+                SearchVowelRegion(strRes);
+                string options = @"
 1) Quick
 2) Tree";
-                    Console.WriteLine(options+"\nНажмите клавишу с номером варианта сортировки\n(Если вы нажали кнопку, которой нет в списке, то будет по умолчанию применятся сортировка методом Quick): ");
+                Console.WriteLine(options + "\nНажмите клавишу с номером варианта сортировки\n(Если вы нажали кнопку, которой нет в списке, то будет по умолчанию применятся сортировка методом Quick): ");
                 Console.Write("Ваш выбор: ");
-                    switch(Console.ReadKey().Key)
-                    {
-                        case ConsoleKey.D1: //Quick
+                switch (Console.ReadKey().Key)
+                {
+                    case ConsoleKey.D1: //Quick
                         Console.Write("\nСортировка Quick: ");
-                        char [] arr= strRes.ToCharArray();
+                        char[] arr = strRes.ToCharArray();
                         Console.WriteLine(QuickSort(arr));
-                            break;
-                        case ConsoleKey.D2:
-                            var treeNode = new TreeNode(strRes[0]);
-                            for (int i = 1; i < strRes.Length; i++)
-                            {
-                                treeNode.Insert(new TreeNode(strRes[i]));
-                            }
-                            Console.Write("\nСортировка Tree: "); //Tree
-                            Console.WriteLine(treeNode.Transform());
-                            break;
-                        default:
-                            {
-                                goto case ConsoleKey.D1;
-                            }
-                    }
+                        break;
+                    case ConsoleKey.D2:
+                        var treeNode = new TreeNode(strRes[0]);
+                        for (int i = 1; i < strRes.Length; i++)
+                        {
+                            treeNode.Insert(new TreeNode(strRes[i]));
+                        }
+                        Console.Write("\nСортировка Tree: "); //Tree
+                        Console.WriteLine(treeNode.Transform());
+                        break;
+                    default:
+                        {
+                            goto case ConsoleKey.D1;
+                        }
                 }
+                Console.WriteLine();
+
+                Program p = new Program();
+                int[] numbers = await p.GenerateAsync(strRes.Length, new RequestParameters(0, strRes.Length - 1, 1));
+                int number;
+                if (numbers == null)
+                {
+                    Random random = new Random();
+                    number = random.Next(0, strRes.Length - 1);
+                    Console.WriteLine("При работе с удаленным Api Random.org была возвращена непредвиденная ошибка\nСтрока, полученная при работе с системным генератором случайных чисел: ");
+                }
+                else
+                {
+                    Console.WriteLine("Строка, полученая при работе с API Random.org (генератором случайных чисел): ");
+                    number = numbers[0];
+                }
+                char[] strChars= strRes.ToCharArray();
+                strChars[Convert.ToInt32(number)] = ' ';
+                foreach (char c in strChars)
+                { Console.Write(c); }
+                Console.Write("\n");
+            }
                 else
                 {
                     strRes = "Ошибка. Были введены не подходящие символы! Неприемлемые символы:";
