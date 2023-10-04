@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
 using Microsoft.OpenApi.Services;
 using SwaggerWebApi.Models;
 using System.Net;
@@ -10,12 +11,17 @@ namespace SwaggerWebApi.Controllers
     [Route("[controller]")]
     public class StringConversionController : ControllerBase
     {
-        private readonly ILogger<StringConversionController> _logger;
-
-        public StringConversionController(ILogger<StringConversionController> logger)
+        private IConfiguration configuration;
+        public StringConversionController(IConfiguration iConfig)
         {
-            _logger = logger;
+            configuration = iConfig;
         }
+        //private readonly ILogger<StringConversionController> _logger;
+
+        //public StringConversionController(ILogger<StringConversionController> logger)
+        //{
+        //    _logger = logger;
+        //}
         /// <summary>
         /// Get something...
         /// </summary>
@@ -33,69 +39,78 @@ namespace SwaggerWebApi.Controllers
         {
             string pattern = "^[a-z]+$";
             Regex rg = new Regex(pattern);
-            if (rg.IsMatch(str))
+            if (!configuration.GetSection("Settings:Blacklist").Get<string[]>().Contains(str))
             {
-                string strRes = WorkWithString.Work(str);
-                string sortMethod;
-                char[] sortOut;
-                switch (sort)
+                if (rg.IsMatch(str))
                 {
-                    case 1: //Quick
-                        {
-                            sortMethod = "Quick";
-                            char[] arr = strRes.ToCharArray();
-                            sortOut = WorkWithString.QuickSort(arr);
-                            break;
-                        }
-                    case 2://Tree
-                        {
-                            sortMethod = "Tree";
-                            var treeNode = new TreeNode(strRes[0]);
-                            for (int i = 1; i < strRes.Length; i++)
-                            {
-                                treeNode.Insert(new TreeNode(strRes[i]));
-                            }
-                            sortOut = treeNode.Transform();
-                            break;
-                        }
-                    default:
-                        {
-                            goto case 1;
-                        }
-                }
-                BaseResponse output = new BaseResponse
-                {
-                    result = new LowerBaseResponse
+                    string strRes = WorkWithString.Work(str);
+                    string sortMethod;
+                    char[] sortOut;
+                    switch (sort)
                     {
-                        input = str,
-                        result = strRes,
-                        numLetters = WorkWithString.CountNumLetter(strRes),
-                        vowelRegion = WorkWithString.SearchVowelRegion(strRes),
-                        sortResult = new Sort { method=sortMethod, output= new string(sortOut)},
-                        randomSpaceString = WorkWithString.RandomSpace(strRes).Result,
+                        case 1: //Quick
+                            {
+                                sortMethod = "Quick";
+                                char[] arr = strRes.ToCharArray();
+                                sortOut = WorkWithString.QuickSort(arr);
+                                break;
+                            }
+                        case 2://Tree
+                            {
+                                sortMethod = "Tree";
+                                var treeNode = new TreeNode(strRes[0]);
+                                for (int i = 1; i < strRes.Length; i++)
+                                {
+                                    treeNode.Insert(new TreeNode(strRes[i]));
+                                }
+                                sortOut = treeNode.Transform();
+                                break;
+                            }
+                        default:
+                            {
+                                goto case 1;
+                            }
                     }
-                };
-                return Ok(output);
+                    BaseResponse output = new BaseResponse
+                    {
+                        result = new LowerBaseResponse
+                        {
+                            input = str,
+                            result = strRes,
+                            numLetters = WorkWithString.CountNumLetter(strRes),
+                            vowelRegion = WorkWithString.SearchVowelRegion(strRes),
+                            sortResult = new Sort { method = sortMethod, output = new string(sortOut) },
+                            randomSpaceString = WorkWithString.RandomSpace(strRes, configuration["RandomApi"].ToString()).Result,
+                        }
+                    };
+                    return Ok(output);
+                }
+                else
+                {
+                    string errorMessage = "Ошибка. Были введены не подходящие символы! Неприемлемые символы:";
+                    List<char> lettersUp = new List<char>();
+                    for (int i = 0; i < str.Length; i++)
+                    {
+                        char letter = char.Parse(str.Substring(i, 1));
+                        if (!rg.IsMatch(letter.ToString()))
+                        {
+                            if (lettersUp.Contains(str[i]))
+                            {
+                                continue;
+                            }
+                            else
+                                lettersUp.Add(str[i]);
+                        }
+                    }
+                    errorMessage += string.Join(",", lettersUp);
+                    ErrorResponse output = new ErrorResponse { errorCode = 400, message = errorMessage };
+                    return BadRequest(output);
+                }
             }
             else
             {
-                string errorMessage = "Ошибка. Были введены не подходящие символы! Неприемлемые символы:";
-                List<char> lettersUp = new List<char>();
-                for (int i = 0; i < str.Length; i++)
-                {
-                    char letter = char.Parse(str.Substring(i, 1));
-                    if (!rg.IsMatch(letter.ToString()))
-                    {
-                        if (lettersUp.Contains(str[i]))
-                        {
-                            continue;
-                        }
-                        else
-                            lettersUp.Add(str[i]);
-                    }
-                }
-                errorMessage += string.Join(",", lettersUp);
-                ErrorResponse output = new ErrorResponse { errorCode = 400, message= errorMessage };
+                string errorMessage = "Ошибка. Входная строка входит в черный список строк: "+str;
+                ErrorResponse output = new ErrorResponse { errorCode = 400, message = errorMessage };
                 return BadRequest(output);
             }
         }
