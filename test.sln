@@ -5,6 +5,8 @@ VisualStudioVersion = 17.3.32901.215
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "test", "test\test.csproj", "{29BEE43B-6E0C-4094-890A-B7EDAB0D8B14}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SwaggerWebApi", "SwaggerWebApi\SwaggerWebApi.csproj", "{F6DDB296-A135-4914-BA33-E78E6542B40D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{29BEE43B-6E0C-4094-890A-B7EDAB0D8B14}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29BEE43B-6E0C-4094-890A-B7EDAB0D8B14}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29BEE43B-6E0C-4094-890A-B7EDAB0D8B14}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6DDB296-A135-4914-BA33-E78E6542B40D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6DDB296-A135-4914-BA33-E78E6542B40D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6DDB296-A135-4914-BA33-E78E6542B40D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6DDB296-A135-4914-BA33-E78E6542B40D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

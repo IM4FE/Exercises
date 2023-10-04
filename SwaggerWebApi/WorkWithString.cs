@@ -1,36 +1,26 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Net;
 using System.Text.Json;
-using test;
-using static System.Net.WebRequestMethods;
-using System.IO;
-using System.Net;
-using test.ModelsRandApi.Request;
-using test.ModelsRandApi.Response;
-using System.Security.Cryptography;
-using System.Collections.Specialized;
+using System.Text.RegularExpressions;
+using System.Text;
+using SwaggerWebApi.ModelsRandApi;
+using SwaggerWebApi.ModelsRandApi.Request;
+using SwaggerWebApi.ModelsRandApi.Response;
+using SwaggerWebApi.Models;
 
-namespace test
+namespace SwaggerWebApi
 {
     public class WorkWithString
     {
         private async Task<T[]> GenerateAsync<T, TParams>(T lenght, TParams parameters)
         {
-            LowerBaseResonce<T> result = await POSTRequstRandApi<T, TParams, LowerBaseResonce<T>>(new BaseRequestRpc<TParams>(parameters), lenght);
+            LowerBaseResonse<T> result = await POSTRequstRandApi<T, TParams, LowerBaseResonse<T>>(new BaseRequestRpc<TParams>(parameters), lenght);
             if (result.random == null)
                 return null;
             T[] randomResult = result.random.data;
             return randomResult;
         }
         private async Task<TResponse> POSTRequstRandApi<T, TRequest, TResponse>(BaseRequestRpc<TRequest> requestData, T lenght)
-            where TResponse : LowerBaseResonce<T>
+            where TResponse : LowerBaseResonse<T>
         {
             string url = "https://api.random.org/json-rpc/4/invoke";
             int id = (int)DateTime.UtcNow.Ticks;
@@ -95,7 +85,7 @@ namespace test
         }
 
         // quick sort
-        static char[] QuickSort(char[] array, int minIndex, int maxIndex)
+        private static char[] QuickSort(char[] array, int minIndex, int maxIndex)
         {
             if (minIndex >= maxIndex)
             {
@@ -109,11 +99,11 @@ namespace test
             return array;
         }
 
-        static char[] QuickSort(char[] array)
+        public static char[] QuickSort(char[] array)
         {
             return QuickSort(array, 0, array.Length - 1);
         }
-        static void SearchVowelRegion(string str)
+        public static string SearchVowelRegion(string str)
         {
             int? firstIndex = null;
             int? endIndex = null;
@@ -130,11 +120,10 @@ namespace test
                     endIndex = firstIndex;
             }
             string res = firstIndex == null ? "В строке нет гласных букв" : "Подстрока с началом и концом из «aeiouy»: " + str.Substring(Convert.ToInt32(firstIndex), Convert.ToInt32(endIndex) - Convert.ToInt32(firstIndex) + 1);
-            Console.WriteLine(res);
+            return res;
         }
-        static void CountNumLetter(string str)
+        public static NumLetters[] CountNumLetter(string str)
         {
-            string res = "";
             char[] lettersAll = str.ToCharArray();
             List<char> lettersSort = new List<char>();
             for (int i = 0; i < str.Length; i++)
@@ -146,9 +135,11 @@ namespace test
                 else
                     lettersSort.Add(str[i]);
             }
+            NumLetters[] res = new NumLetters[lettersSort.Count];
             for (int i = 0; i < lettersSort.Count; i++)
             {
                 int num = 0;
+                NumLetters obj= new NumLetters();
                 for (int j = 0; j < lettersAll.Length; j++)
                 {
                     if (lettersSort[i] == lettersAll[j])
@@ -156,9 +147,11 @@ namespace test
                         num++;
                     }
                 }
-                res += "\nСимвол '" + lettersSort[i] + "' повторяется " + num + " раз";
+                obj.Letter = lettersSort[i];
+                obj.Count= num;
+                res[i] = obj;
             }
-            Console.WriteLine(res);
+            return res;
         }
         static string Mirror(int strLength, string str)
         {
@@ -169,13 +162,32 @@ namespace test
             }
             return res;
         }
-        public static async Task<string> Work(string str)
+        public static async Task<string> RandomSpace(string str)
         {
-            string pattern = "^[a-z]+$";
-            Regex rg = new Regex(pattern);
             string strRes = "";
-            if (rg.IsMatch(str))
+            WorkWithString p = new WorkWithString();
+            int[] numbers = await p.GenerateAsync(str.Length, new RequestParameters(0, str.Length - 1, 1));
+            int number;
+            if (numbers == null)
             {
+                Random random = new Random();
+                number = random.Next(0, str.Length - 1);
+                strRes="При работе с удаленным Api Random.org была возвращена непредвиденная ошибка\nСтрока, полученная при работе с системным генератором случайных чисел: ";
+            }
+            else
+            {
+                strRes="Строка, полученая при работе с API Random.org (генератором случайных чисел): ";
+                number = numbers[0];
+            }
+            char[] strChars = str.ToCharArray();
+            strChars[Convert.ToInt32(number)] = ' ';
+            foreach (char c in strChars)
+            { strRes += c; }
+            return strRes;
+        }
+        public static string Work(string str)
+        {
+            string strRes = "";
                 if (str.Length % 2 == 0)
                 {
                     int strLength = str.Length / 2;
@@ -188,76 +200,6 @@ namespace test
                 {
                     strRes = Mirror(str.Length, str) + str;
                 }
-                Console.Write(strRes);
-                CountNumLetter(strRes);
-                SearchVowelRegion(strRes);
-                string options = @"
-1) Quick
-2) Tree";
-                Console.WriteLine(options + "\nНажмите клавишу с номером варианта сортировки\n(Если вы нажали кнопку, которой нет в списке, то будет по умолчанию применятся сортировка методом Quick): ");
-                Console.Write("Ваш выбор: ");
-                switch (Console.ReadKey().Key)
-                {
-                    case ConsoleKey.D1: //Quick
-                        Console.Write("\nСортировка Quick: ");
-                        char[] arr = strRes.ToCharArray();
-                        Console.WriteLine(QuickSort(arr));
-                        break;
-                    case ConsoleKey.D2:
-                        var treeNode = new TreeNode(strRes[0]);
-                        for (int i = 1; i < strRes.Length; i++)
-                        {
-                            treeNode.Insert(new TreeNode(strRes[i]));
-                        }
-                        Console.Write("\nСортировка Tree: "); //Tree
-                        Console.WriteLine(treeNode.Transform());
-                        break;
-                    default:
-                        {
-                            goto case ConsoleKey.D1;
-                        }
-                }
-                Console.WriteLine();
-
-                WorkWithString p = new WorkWithString();
-                int[] numbers = await p.GenerateAsync(strRes.Length, new RequestParameters(0, strRes.Length - 1, 1));
-                int number;
-                if (numbers == null)
-                {
-                    Random random = new Random();
-                    number = random.Next(0, strRes.Length - 1);
-                    Console.WriteLine("При работе с удаленным Api Random.org была возвращена непредвиденная ошибка\nСтрока, полученная при работе с системным генератором случайных чисел: ");
-                }
-                else
-                {
-                    Console.WriteLine("Строка, полученая при работе с API Random.org (генератором случайных чисел): ");
-                    number = numbers[0];
-                }
-                char[] strChars = strRes.ToCharArray();
-                strChars[Convert.ToInt32(number)] = ' ';
-                foreach (char c in strChars)
-                { Console.Write(c); }
-                Console.Write("\n");
-            }
-            else
-            {
-                strRes = "Ошибка. Были введены не подходящие символы! Неприемлемые символы:";
-                List<char> lettersUp = new List<char>();
-                for (int i = 0; i < str.Length; i++)
-                {
-                    char letter = char.Parse(str.Substring(i, 1));
-                    if (!rg.IsMatch(letter.ToString()))
-                    {
-                        if (lettersUp.Contains(str[i]))
-                        {
-                            continue;
-                        }
-                        else
-                            lettersUp.Add(str[i]);
-                    }
-                }
-                Console.WriteLine(strRes + string.Join(",", lettersUp));
-            }
             return strRes;
         }
     }
@@ -315,15 +257,6 @@ namespace test
             }
 
             return elements.ToArray();
-        }
-    }
-    public class Program
-    {
-        static async Task Main(string[] args)
-        {
-            string str = Console.ReadLine();
-            await WorkWithString.Work(str);
-            Console.ReadLine();
         }
     }
 }
