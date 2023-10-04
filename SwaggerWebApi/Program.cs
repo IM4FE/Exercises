@@ -14,7 +14,7 @@ builder.Services.AddSwaggerGen(o =>
         new OpenApiInfo
         {
             Title = "MaFE API",
-            Description = "My simle Api for work with string. This is too easy(no)",
+            Description = "My simple Api for work with string. This is too easy(no)",
             Version = "v1",
         });
     o.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{Assembly.GetExecutingAssembly().GetName().Name}.xml"));

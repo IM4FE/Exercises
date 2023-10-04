@@ -6,23 +6,23 @@ using SwaggerWebApi.ModelsRandApi;
 using SwaggerWebApi.ModelsRandApi.Request;
 using SwaggerWebApi.ModelsRandApi.Response;
 using SwaggerWebApi.Models;
+using Microsoft.Extensions.Configuration;
 
 namespace SwaggerWebApi
 {
     public class WorkWithString
     {
-        private async Task<T[]> GenerateAsync<T, TParams>(T lenght, TParams parameters)
+        private async Task<T[]> GenerateAsync<T, TParams>(T lenght, TParams parameters, string url)
         {
-            LowerBaseResonse<T> result = await POSTRequstRandApi<T, TParams, LowerBaseResonse<T>>(new BaseRequestRpc<TParams>(parameters), lenght);
+            LowerBaseResonse<T> result = await POSTRequstRandApi<T, TParams, LowerBaseResonse<T>>(new BaseRequestRpc<TParams>(parameters), lenght, url);
             if (result.random == null)
                 return null;
             T[] randomResult = result.random.data;
             return randomResult;
         }
-        private async Task<TResponse> POSTRequstRandApi<T, TRequest, TResponse>(BaseRequestRpc<TRequest> requestData, T lenght)
+        private async Task<TResponse> POSTRequstRandApi<T, TRequest, TResponse>(BaseRequestRpc<TRequest> requestData, T lenght, string url)
             where TResponse : LowerBaseResonse<T>
         {
-            string url = "https://api.random.org/json-rpc/4/invoke";
             int id = (int)DateTime.UtcNow.Ticks;
             requestData.id = id;
 
@@ -162,11 +162,11 @@ namespace SwaggerWebApi
             }
             return res;
         }
-        public static async Task<string> RandomSpace(string str)
+        public static async Task<string> RandomSpace(string str, string url)
         {
             string strRes = "";
             WorkWithString p = new WorkWithString();
-            int[] numbers = await p.GenerateAsync(str.Length, new RequestParameters(0, str.Length - 1, 1));
+            int[] numbers = await p.GenerateAsync(str.Length, new RequestParameters(0, str.Length - 1, 1), url);
             int number;
             if (numbers == null)
             {
