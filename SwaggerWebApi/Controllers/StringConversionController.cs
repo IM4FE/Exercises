@@ -53,11 +53,11 @@ namespace SwaggerWebApi.Controllers
                 {
                     currentNumberOfUsers++;
                 }
-                string pattern = "^[a-z]+$";
-                Regex rg = new Regex(pattern);
                 if (!configuration.GetSection("Settings:Blacklist").Get<string[]>().Contains(str))
                 {
-                    if (rg.IsMatch(str))
+                    string pattern = "^[a-z]+$";
+                    Regex rg = new Regex(pattern);
+                    if (WorkWithString.StringCheck(str, rg))
                     {
                         string strRes = WorkWithString.Work(str);
                         string sortMethod;
@@ -94,8 +94,8 @@ namespace SwaggerWebApi.Controllers
                                 input = str,
                                 result = strRes,
                                 numLetters = WorkWithString.CountNumLetter(strRes),
-                                vowelRegion = WorkWithString.SearchVowelRegion(strRes),
-                                sortResult = new Sort { method = sortMethod, output = new string(sortOut) },
+                                vowelRegion = WorkWithString.SearchVowelRegion(strRes) == null? "В строке нет гласных букв" : "Подстрока с началом и концом из «aeiouy»: "+ WorkWithString.SearchVowelRegion(strRes),
+                        sortResult = new Sort { method = sortMethod, output = new string(sortOut) },
                                 randomSpaceString = WorkWithString.RandomSpace(strRes, configuration["RandomApi"].ToString()).Result,
                             }
                         };

@@ -12,6 +12,12 @@ namespace SwaggerWebApi
 {
     public class WorkWithString
     {
+        public static bool StringCheck(string str, Regex rg)
+        {
+            if (rg.IsMatch(str))
+                return true;
+            return false;
+        }
         private async Task<T[]> GenerateAsync<T, TParams>(T lenght, TParams parameters, string url)
         {
             LowerBaseResonse<T> result = await POSTRequstRandApi<T, TParams, LowerBaseResonse<T>>(new BaseRequestRpc<TParams>(parameters), lenght, url);
@@ -119,7 +125,7 @@ namespace SwaggerWebApi
                 if (i == str.Length - 1 && endIndex == null)
                     endIndex = firstIndex;
             }
-            string res = firstIndex == null ? "В строке нет гласных букв" : "Подстрока с началом и концом из «aeiouy»: " + str.Substring(Convert.ToInt32(firstIndex), Convert.ToInt32(endIndex) - Convert.ToInt32(firstIndex) + 1);
+            string? res = firstIndex==null? null : str.Substring(Convert.ToInt32(firstIndex), Convert.ToInt32(endIndex) - Convert.ToInt32(firstIndex) + 1);
             return res;
         }
         public static NumLetters[] CountNumLetter(string str)
@@ -203,7 +209,7 @@ namespace SwaggerWebApi
             return strRes;
         }
     }
-    class TreeNode //Tree sort
+    public class TreeNode //Tree sort
     {
         public TreeNode(char data)
         {
