@@ -113,7 +113,7 @@ namespace test
         {
             return QuickSort(array, 0, array.Length - 1);
         }
-        static void SearchVowelRegion(string str)
+        static string SearchVowelRegion(string str)
         {
             int? firstIndex = null;
             int? endIndex = null;
@@ -129,10 +129,10 @@ namespace test
                 if (i == str.Length - 1 && endIndex == null)
                     endIndex = firstIndex;
             }
-            string res = firstIndex == null ? "В строке нет гласных букв" : "Подстрока с началом и концом из «aeiouy»: " + str.Substring(Convert.ToInt32(firstIndex), Convert.ToInt32(endIndex) - Convert.ToInt32(firstIndex) + 1);
-            Console.WriteLine(res);
+            string res = firstIndex == null ? null : str.Substring(Convert.ToInt32(firstIndex), Convert.ToInt32(endIndex) - Convert.ToInt32(firstIndex) + 1);
+            return res;
         }
-        static void CountNumLetter(string str)
+        static string CountNumLetter(string str)
         {
             string res = "";
             char[] lettersAll = str.ToCharArray();
@@ -158,7 +158,7 @@ namespace test
                 }
                 res += "\nСимвол '" + lettersSort[i] + "' повторяется " + num + " раз";
             }
-            Console.WriteLine(res);
+            return res;
         }
         static string Mirror(int strLength, string str)
         {
@@ -169,28 +169,39 @@ namespace test
             }
             return res;
         }
+        static string ProcessingString(string str)
+        {
+            string strRes="";
+            if (str.Length % 2 == 0)
+            {
+                int strLength = str.Length / 2;
+                string strTemp1 = str.Substring(0, strLength);
+                string strTemp2 = str.Substring(strLength);
+                strRes += Mirror(strLength, strTemp1);
+                strRes += Mirror(strLength, strTemp2);
+            }
+            else
+            {
+                strRes = Mirror(str.Length, str) + str;
+            }
+            return strRes;
+        }
         public static async Task<string> Work(string str)
         {
             string pattern = "^[a-z]+$";
             Regex rg = new Regex(pattern);
-            string strRes = "";
+            string strRes, message;
             if (rg.IsMatch(str))
             {
-                if (str.Length % 2 == 0)
-                {
-                    int strLength = str.Length / 2;
-                    string strTemp1 = str.Substring(0, strLength);
-                    string strTemp2 = str.Substring(strLength);
-                    strRes += Mirror(strLength, strTemp1);
-                    strRes += Mirror(strLength, strTemp2);
-                }
-                else
-                {
-                    strRes = Mirror(str.Length, str) + str;
-                }
-                Console.Write(strRes);
-                CountNumLetter(strRes);
-                SearchVowelRegion(strRes);
+                strRes=ProcessingString(str);
+                Console.WriteLine(strRes);
+
+                message = CountNumLetter(strRes);
+                Console.WriteLine(message);
+
+                message= SearchVowelRegion(strRes) == null ? "В строке нет гласных букв" : "Подстрока с началом и концом из «aeiouy»: " + SearchVowelRegion(strRes);
+                Console.WriteLine(message);
+
                 string options = @"
 1) Quick
 2) Tree";
